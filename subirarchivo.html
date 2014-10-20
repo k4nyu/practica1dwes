@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+    </head>
+    <body>
+        <form action="subir.php" method="post" enctype="multipart/form-data">
+            <input type="text" name="nombre" placeholder="Escribe el nombre nuevo..." />
+            <input type="file" name="archivo[]" multiple />
+            <input type="radio" name="accion" value="2" />Reemplazar
+            <input type="radio" name="accion" value="1" />Renombrar
+            <input type="submit" value="Enviar"/>
+        </form>
+    </body>
+</html>
