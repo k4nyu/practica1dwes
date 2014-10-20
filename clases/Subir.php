@@ -3,11 +3,16 @@
 class Subir {
 
     private $files, $input, $destino, $nombre, $accion, $maximo, $tipos, $extensiones, $crearCarpeta;
-    private $errorPHP, $error;
+    private $errorPHP, $error, $resultado=0;
 
     const IGNORAR = 0, RENOMBRAR = 1, REEMPLAZAR = 2;
     const ERROR_INPUT = -1;
-
+/*
+ * Constructor de la clase. Inicializa las variables necesarias con sus valores y
+ * se le pasa un $input que será el input file del formulario
+ * 
+ * @param string $input
+ */
     function __construct($input) {
         $this->input = $input;
         $this->destino = "subidos/";
@@ -20,27 +25,32 @@ class Subir {
         $this->errorPHP = UPLOAD_ERR_OK;
         $this->error = 0;
     }
+    
+    //Recupera la variable errorPHP
 
     function getErrorPHP() {
         return $this->errorPHP;
     }
 
-//
+//Recupera la variable error
 
     function getError() {
         return $this->error;
     }
-
-//
-
-    function getErrorMensaje() {
-        
-    }
-
+    
+    //Crea la carpeta de destino
+    
     function setCrearCarpeta($crearCarpeta) {
         $this->crearCarpeta = $crearCarpeta;
     }
 
+    /*Establece el destino pasándole un $destino
+     * 
+     * @param string $destino
+     * 
+     */
+    
+    
     function setDestino($destino) {
         $caracter = substr($destino, -1);
         if ($caracter != "/")
@@ -48,25 +58,40 @@ class Subir {
         $this->destino = $destino;
     }
 
-//
+//Establece un nombre nuevo para el input file
 
     function setNombre($nombre) {
         $this->nombre = $nombre;
     }
 
-//
+/*Establece la accion que se desea hacer pasándole una $accion
+ * 
+ * 
+ * @param string $destino
+ * 
+ */
 
     function setAccion($accion) {
         $this->accion = $accion;
     }
 
-//
+/*
+ * Establece el tamaño máximo de archivo con $maximo
+ * 
+ * 
+ * @param string $maximo
+ */
 
     function setMaximo($maximo) {
         $this->maximo = $maximo;
     }
 
-//
+/*
+ * Establece el tipo mime que se quiera desde $tipo
+ * 
+ * 
+ * @param string $tipo
+ */
 
     function addTipo($tipo) {
         if (is_array($tipo)) {
@@ -76,7 +101,12 @@ class Subir {
         }
     }
 
-//
+/*
+ * Establece la extension del fichero con $extension
+ * 
+ * 
+ * @param string $extension
+ */
 
     function setExtension($extension) {
         if (is_array($extension)) {
@@ -87,7 +117,12 @@ class Subir {
         }
     }
 
-//
+/*
+ * Añade la extension deseada con $extension
+ * 
+ * 
+ * @param string $extension
+ */
 
     function addExtension($extension) {
         if (is_array($extension)) {
@@ -97,7 +132,7 @@ class Subir {
         }
     }
 
-//
+//Comprueba si se ha introducido un input file correctamente
 
     function isInput() {
         if (!isset($_FILES[$this->input])) {
@@ -107,7 +142,7 @@ class Subir {
         return true;
     }
 
-//
+//Comprueba si hay error en el input
 
     private function isError() {
         if ($this->errorPHP != UPLOAD_ERR_OK) {
@@ -116,7 +151,7 @@ class Subir {
         return false;
     }
 
-//
+//Comprueba si el tamaño máximo se ha excedido o no
 
     private function isTamano() {
         if ($this->files["size"] > $this->maximo) {
@@ -126,7 +161,7 @@ class Subir {
         return true;
     }
 
-//
+//Comprueba si la extension es correcta
 
     private function isExtension($extension) {
         if (sizeof($this->extensiones) > 0 && !in_array($extension, $this->extensiones)) {
@@ -136,7 +171,7 @@ class Subir {
         return true;
     }
 
-//
+//Comprueba si la carpeta existe
 
     private function isCarpeta() {
         if (!file_exists($this->destino) && !is_dir($this->destino)) {
@@ -146,11 +181,18 @@ class Subir {
         return true;
     }
 
-//
+//Crea una carpeta de destino
 
     private function crearCarpeta() {
         return mkdir($this->destino, Configuracion::PERMISOS, true);
     }
+    
+/*Comprueba el tamaño maximo en un array de archivos
+ *
+ * 
+ * @param string $key
+ * 
+ */
 
     private function isTamanoArray($key) {
         if ($this->files["size"][$key] > $this->maximo) {
@@ -160,7 +202,12 @@ class Subir {
         return true;
     }
 
+    /*Comprueba si hay errores, mostrándolos en pantalla, y sube lo que esté correctamente:
+     * tamaño del archivo, extension, nombre, errores PHP, etc.
+     */
+    
     private function subirArray() {
+        $numeroArchivo=1;
         foreach ($this->files["name"] as $key => $value) {
 
             $this->errorPHP = $this->files["error"][$key];
@@ -169,8 +216,7 @@ class Subir {
                     $partes = pathinfo($this->files["name"][$key]);
                     $extension = $partes['extension'];
                     $nombreOriginal = $partes['filename'];
-                    if ($this->isExtension($extension)) {
-
+                    if ($this->isExtension($extension) && $nombreOriginal != "") {
                         $origen = $this->files["tmp_name"][$key];
                         $destino = $this->destino . $this->nombre . "." . $extension;
                         if ($this->accion == Subir::REEMPLAZAR) {
@@ -180,6 +226,7 @@ class Subir {
                                 $destino = $this->destino . $this->nombre . "." . $extension;
                             }
                             move_uploaded_file($origen, $destino);
+                            $this->resultado++;
                         } elseif ($this->accion == Subir::IGNORAR) {
                             if ($this->nombre === "") {
                                 $destino = $this->destino . $nombreOriginal . "." . $extension;
@@ -189,9 +236,10 @@ class Subir {
                             if (file_exists($destino)) {
                                 $this->error = -5;
                             }move_uploaded_file($origen, $destino);
+                            $this->resultado++;
                         } elseif ($this->accion == Subir::RENOMBRAR) {
                             if ($this->nombre === "") {
-                                $this->nombre="archivo";
+                                $this->nombre = "archivo";
                             }
                             $i = 1;
                             $destino = $this->destino . $this->nombre . "." . $extension;
@@ -200,14 +248,26 @@ class Subir {
                                 $i++;
                             }
                             move_uploaded_file($origen, $destino);
+                            $this->resultado++;
                         }
                         $this->error = -6;
                     }
+                } else {
+                    echo "El archivo " . $numeroArchivo . " supera el tamaño de archivo permitido.<br/>";
                 }
-            }
+            } 
+            $numeroArchivo++;
         }
     }
+    
+    //Devuelve el contenido de la variable $resultado
+    
+    function getResultado(){
+        return $this->resultado;
+    }
 
+    //Igual que subirArray pero para archivos sueltos
+    
     private function subirSolo() {
         $partes = pathinfo($this->files["name"]);
         $extension = $partes['extension'];
@@ -238,7 +298,14 @@ class Subir {
         }
         $this->error = -6;
         return false;
+        $this->resultado++;
     }
+    
+    /*Función maestra, eje de la clase. Ejecuta la funcion de subir un archivo o varios.
+     * Primero comprueba si el input es correcto y si la carpeta existe, si no, la crea.
+     * Después ejecuta subirArray o subirSolo, dependiendo de si es array o no.
+     * Finalmente obtiene los resultados de las operaciones y las muestra en pantalla.
+     */
 
     function subir() {
         $this->error = 0;
@@ -261,8 +328,12 @@ class Subir {
             $this->subirArray();
         } elseif (!is_array($this->files)) {
             $this->subirSolo();
-        } else {
-            echo "Ha habido algun error subiendo el archivo o no has seleccionado ninguno. <br/>";
+        }
+        if($this->getResultado()==0){
+            echo "No se ha seleccionado ningún archivo";
+        }
+        else{
+            echo $this->getResultado() . " archivo/s subido/s con éxito.";
         }
     }
 
