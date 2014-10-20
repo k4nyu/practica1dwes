@@ -18,6 +18,7 @@ and open the template in the editor.
             $archivo->setAccion($_POST["accion"]);
         }
         $archivo->subir();
+        echo $archivo->getMensaje();
         ?>
     </body>
 </html>

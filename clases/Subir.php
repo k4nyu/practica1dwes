@@ -3,7 +3,7 @@
 class Subir {
 
     private $files, $input, $destino, $nombre, $accion, $maximo, $tipos, $extensiones, $crearCarpeta;
-    private $errorPHP, $error, $resultado=0;
+    private $errorPHP, $error, $resultado=0, $mensaje="";
 
     const IGNORAR = 0, RENOMBRAR = 1, REEMPLAZAR = 2;
     const ERROR_INPUT = -1;
@@ -24,6 +24,12 @@ class Subir {
         $this->extensiones = array();
         $this->errorPHP = UPLOAD_ERR_OK;
         $this->error = 0;
+    }
+    
+    //Funcion que va almacenando los mensajes del programa
+    
+    function getMensaje(){
+        return $this->mensaje;
     }
     
     //Recupera la variable errorPHP
@@ -253,7 +259,7 @@ class Subir {
                         $this->error = -6;
                     }
                 } else {
-                    echo "El archivo " . $numeroArchivo . " supera el tamaño de archivo permitido.<br/>";
+                    $this->mensaje = $this->mensaje . "<p>El archivo " . $numeroArchivo . " supera el tamaño de archivo permitido.</p>";
                 }
             } 
             $numeroArchivo++;
@@ -330,10 +336,10 @@ class Subir {
             $this->subirSolo();
         }
         if($this->getResultado()==0){
-            echo "No se ha seleccionado ningún archivo";
+            $this->mensaje = $this->mensaje . "<p>No se ha seleccionado ningún archivo</p>";
         }
         else{
-            echo $this->getResultado() . " archivo/s subido/s con éxito.";
+            $this->mensaje = $this->mensaje . "<p>" . $this->getResultado() . " archivo/s subido/s con éxito.</p>";
         }
     }
 
